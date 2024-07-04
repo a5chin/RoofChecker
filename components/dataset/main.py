@@ -1,11 +1,11 @@
 from pathlib import Path
 
-import cv2
+from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
-from components.dataset.config import Image, Quality
+from components.dataset.config import ImageInfo, Quality
 
 
 class RoofDataLoader(DataLoader):
@@ -13,32 +13,33 @@ class RoofDataLoader(DataLoader):
 
     def __init__(
         self: "RoofDataLoader",
-        transform: transforms.Compose | None = None,
         quality: Quality = Quality.GOOD,
         extensions: tuple[str] = ("png",),
+        transform: transforms.Compose | None = None,
         dataset: Dataset | None = None,
         batch_size: int = 4,
+        shuffle: bool = True,
     ) -> None:
         """Initialize DataLoader.
 
         Args:
         ----
-            transform (transforms.Compose | None, optional):
-                The class to transform image. Defaults to None.
             quality (Quality, optional):
                 Quality.BAD or Quality.GOOD. Defaults to Quality.GOOD.
             extensions (tuple[str], optional): Image extensions. Defaults to ("png",).
+            transform (transforms.Compose | None, optional):
+                The class to transform image. Defaults to None.
             dataset (Dataset | None, optional): The target Dataset Defaults to None.
             batch_size (int, optional): The batch size of target Dataset. Defaults to 4.
+            shuffle (bool, optional): It is shuffled or not. Defaults to True.
 
         """
         if transform is None:
             transform = transforms.Compose(
                 [
                     transforms.ToTensor(),
-                    transforms.RandomCrop(size=Image.WIDTH // 5),
-                    transforms.Resize(size=Image.WIDTH // 10),
-                    transforms.Normalize(mean=(0.5,), std=(0.5,)),
+                    transforms.Resize(ImageInfo.WIDTH // 2),
+                    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
                 ]
             )
         if dataset is None:
@@ -46,7 +47,7 @@ class RoofDataLoader(DataLoader):
                 transform=transform, quality=quality, extensions=extensions
             )
 
-        super().__init__(dataset=dataset, batch_size=batch_size, shuffle=True)
+        super().__init__(dataset=dataset, batch_size=batch_size, shuffle=shuffle)
 
 
 class RoofDataset(Dataset):
@@ -75,7 +76,11 @@ class RoofDataset(Dataset):
         self.images_list = [
             file
             for extension in extensions
-            for file in Path(f"data/{self.quality.name}").glob(f"*.{extension}")
+            for file in (
+                Path("data")
+                if quality == Quality.BOTH
+                else Path(f"data/{self.quality.name}")
+            ).glob(f"**/*.{extension}" if quality == Quality.BOTH else f"*.{extension}")
         ]
 
     def __getitem__(self: "RoofDataset", index: int) -> tuple[Tensor, Tensor]:
@@ -91,7 +96,7 @@ class RoofDataset(Dataset):
 
         """
         p = self.images_list[index]
-        img = cv2.imread(p, cv2.IMREAD_GRAYSCALE)
+        img = Image.open(p).convert("RGB")
 
         return self.transform(img), self.quality.value
 

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Image:
+class ImageInfo:
     """Config of input images."""
 
     WIDTH: int = 1280
@@ -15,3 +15,4 @@ class Quality(enum.Enum):
 
     BAD = 0
     GOOD = 1
+    BOTH = 3
