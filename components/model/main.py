@@ -1,7 +1,7 @@
 import timm
 from torch import nn
 
-from components.model.config import Model
+from components.config import Model
 
 
 def get_model(
