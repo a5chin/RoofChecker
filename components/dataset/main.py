@@ -5,7 +5,8 @@ from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
-from components.dataset.config import ImageInfo, Quality
+from components.config import Quality
+from components.share import get_transform
 
 
 class RoofDataLoader(DataLoader):
@@ -35,13 +36,7 @@ class RoofDataLoader(DataLoader):
 
         """
         if transform is None:
-            transform = transforms.Compose(
-                [
-                    transforms.ToTensor(),
-                    transforms.Resize(ImageInfo.WIDTH // 2),
-                    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-                ]
-            )
+            transform = get_transform()
         if dataset is None:
             dataset = RoofDataset(
                 transform=transform, quality=quality, extensions=extensions
