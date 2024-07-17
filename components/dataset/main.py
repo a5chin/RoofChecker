@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
 from components.config import Quality
-from components.share.transform import get_transform
+from components.share import get_transform
 
 
 class RoofDataLoader(DataLoader):
